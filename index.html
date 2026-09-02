@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Auditoria de Fretes</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        /* =========================
+           HEADER
+        ========================== */
+
+        header {
+            background: #12355b;
+            color: white;
+            padding: 18px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .transportadora {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* =========================
+           CONTAINER
+        ========================== */
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* =========================
+           CARDS
+        ========================== */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card-label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .card-danger {
+            color: #dc2626;
+        }
+
+        .card-success {
+            color: #16a34a;
+        }
+
+        /* =========================
+           FILTROS
+        ========================== */
+
+        .filtros {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .campo label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #4b5563;
+        }
+
+        input,
+        select,
+        textarea {
+            font-family: inherit;
+        }
+
+        .campo input,
+        .campo select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 9px 12px;
+            min-width: 220px;
+            outline: none;
+        }
+
+        .campo input:focus,
+        .campo select:focus,
+        textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+        }
+
+        /* =========================
+           TABELA
+        ========================== */
+
+        .tabela-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #eef0f2;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .valor {
+            font-weight: 600;
+        }
+
+        .divergencia {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        /* =========================
+           STATUS
+        ========================== */
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .status-pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-respondido {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-nao-procedente {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* =========================
+           BOTÃO
+        ========================== */
+
+        button {
+            border: none;
+            border-radius: 6px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-detalhar {
+            background: #12355b;
+            color: white;
+        }
+
+        .btn-detalhar:hover {
+            background: #0e2947;
+        }
+
+        .btn-salvar {
+            background: #16a34a;
+            color: white;
+            padding: 11px 20px;
+        }
+
+        .btn-salvar:hover {
+            background: #15803d;
+        }
+
+        /* =========================
+           MODAL
+        ========================== */
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-overlay.aberto {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+        }
+
+        .fechar {
+            background: transparent;
+            font-size: 24px;
+            color: #6b7280;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* =========================
+           RESUMO DO DOCUMENTO
+        ========================== */
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .info {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .info small {
+            display: block;
+            color: #6b7280;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        .info strong {
+            font-size: 14px;
+        }
+
+        /* =========================
+           COMPARAÇÃO
+        ========================== */
+
+        .secao-titulo {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+
+        .comparacao {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .comparacao th {
+            background: #12355b;
+            color: white;
+            text-transform: none;
+        }
+
+        .comparacao td {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .diferenca-positiva {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .diferenca-zero {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        /* =========================
+           MANIFESTAÇÃO
+        ========================== */
+
+        .manifestacao {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .opcoes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .opcao {
+            border: 1px solid #d1d5db;
+            background: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .opcao.selecionada-procedente {
+            background: #dcfce7;
+            border-color: #16a34a;
+            color: #166534;
+        }
+
+        .opcao.selecionada-nao-procedente {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #991b1b;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            resize: vertical;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        .rodape-modal {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* =========================
+           RESPONSIVO
+        ========================== */
+
+        @media (max-width: 900px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filtros {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .campo input,
+            .campo select {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabela-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Auditoria de Fretes</h1>
+    <div class="transportadora">
+        Transportadora ABC Ltda.
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- DASHBOARD -->
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="card-label">Documentos analisados</div>
+            <div class="card-value" id="totalDocumentos">
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Documentos divergentes</div>
+            <div class="card-value card-danger" id="totalDivergentes">
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Documentos respondidos</div>
+            <div class="card-value card-success" id="totalRespondidos">
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Valor total das divergências</div>
+            <div class="card-value card-danger" id="valorDivergencias">
+                R$ 0,00
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- FILTROS -->
+
+    <div class="filtros">
+
+        <div class="campo">
+            <label>CT-e</label>
+            <input
+                type="text"
+                id="filtroCte"
+                placeholder="Digite o CT-e"
+                oninput="renderizarTabela()"
+            >
+        </div>
+
+        <div class="campo">
+            <label>Status</label>
+
+            <select
+                id="filtroStatus"
+                onchange="renderizarTabela()"
+            >
+                <option value="TODOS">Todos</option>
+                <option value="PENDENTE">Pendentes</option>
+                <option value="PROCEDENTE">Procedentes</option>
+                <option value="NAO_PROCEDENTE">Não procedentes</option>
+            </select>
+        </div>
+
+    </div>
+
+
+    <!-- TABELA -->
+
+    <div class="tabela-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>CT-e</th>
+                    <th>NF</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Total Calculado</th>
+                    <th>Total Utilizado</th>
+                    <th>Divergência</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+
+            </thead>
+
+            <tbody id="tabelaFretes"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- MODAL -->
+
+<div
+    class="modal-overlay"
+    id="modalOverlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2 id="modalTitulo">
+                Detalhamento do CT-e
+            </h2>
+
+            <button
+                class="fechar"
+                onclick="fecharModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <!-- INFORMAÇÕES -->
+
+            <div class="info-grid">
+
+                <div class="info">
+                    <small>CT-e</small>
+                    <strong id="modalCte"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Nota Fiscal</small>
+                    <strong id="modalNf"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Origem</small>
+                    <strong id="modalOrigem"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Destino</small>
+                    <strong id="modalDestino"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Peso calculado</small>
+                    <strong id="modalPesoCalculado"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Peso utilizado</small>
+                    <strong id="modalPesoUtilizado"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Valor mercadoria</small>
+                    <strong id="modalValorMercadoria"></strong>
+                </div>
+
+                <div class="info">
+                    <small>Diferença total</small>
+                    <strong
+                        id="modalDiferenca"
+                        class="divergencia"
+                    ></strong>
+                </div>
+
+            </div>
+
+
+            <!-- COMPARAÇÃO -->
+
+            <div class="secao-titulo">
+                Composição do frete
+            </div>
+
+            <table class="comparacao">
+
+                <thead>
+
+                    <tr>
+                        <th>Componente</th>
+                        <th>Calculado</th>
+                        <th>Utilizado</th>
+                        <th>Diferença</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="tabelaComponentes"></tbody>
+
+            </table>
+
+
+            <!-- MANIFESTAÇÃO -->
+
+            <div class="manifestacao">
+
+                <div class="secao-titulo">
+                    Manifestação do transportador
+                </div>
+
+                <div class="opcoes">
+
+                    <button
+                        class="opcao"
+                        id="btnProcedente"
+                        onclick="selecionarStatus('PROCEDENTE')"
+                    >
+                        ✓ Divergência procedente
+                    </button>
+
+                    <button
+                        class="opcao"
+                        id="btnNaoProcedente"
+                        onclick="selecionarStatus('NAO_PROCEDENTE')"
+                    >
+                        ✕ Divergência não procedente
+                    </button>
+
+                </div>
+
+                <textarea
+                    id="comentario"
+                    placeholder="Informe aqui os comentários, justificativas ou observações referentes à divergência..."
+                ></textarea>
+
+                <div class="rodape-modal">
+
+                    <button
+                        class="btn-salvar"
+                        onclick="salvarManifestacao()"
+                    >
+                        Salvar manifestação
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+     * ============================================
+     * DADOS TEMPORÁRIOS
+     * ============================================
+     *
+     * Futuramente esta parte será substituída
+     * por uma chamada à API / PostgreSQL.
+     */
+
+    const fretes = [
+
+        {
+            id: 1,
+
+            cte: "123456",
+            nf: "987654",
+
+            origem: "São Paulo - SP",
+            destino: "Curitiba - PR",
+
+            pesoCalculado: 65.8,
+            pesoUtilizado: 65.83,
+
+            valorMercCalculado: 2167.26,
+            valorMercUtilizado: 2167.26,
+
+            componentes: [
+
+                {
+                    nome: "Frete Peso",
+                    calculado: 98.00,
+                    utilizado: 135.00
+                },
+
+                {
+                    nome: "GRIS + Ad Valorem",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Pedágio",
+                    calculado: 6.80,
+                    utilizado: 6.80
+                },
+
+                {
+                    nome: "Taxa TDE",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Taxa CT-e",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "ICMS",
+                    calculado: 14.29,
+                    utilizado: 19.34
+                }
+
+            ],
+
+            totalCalculado: 119.09,
+            totalUtilizado: 161.14,
+
+            status: "PENDENTE",
+            comentario: ""
+        },
+
+
+        {
+            id: 2,
+
+            cte: "123457",
+            nf: "987655",
+
+            origem: "São Paulo - SP",
+            destino: "Curitiba - PR",
+
+            pesoCalculado: 63.5,
+            pesoUtilizado: 63.48,
+
+            valorMercCalculado: 1851.12,
+            valorMercUtilizado: 1851.12,
+
+            componentes: [
+
+                {
+                    nome: "Frete Peso",
+                    calculado: 98.00,
+                    utilizado: 135.00
+                },
+
+                {
+                    nome: "GRIS + Ad Valorem",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Pedágio",
+                    calculado: 6.80,
+                    utilizado: 6.80
+                },
+
+                {
+                    nome: "Taxa TDE",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Taxa CT-e",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "ICMS",
+                    calculado: 14.29,
+                    utilizado: 19.34
+                }
+
+            ],
+
+            totalCalculado: 119.09,
+            totalUtilizado: 161.14,
+
+            status: "PENDENTE",
+            comentario: ""
+        },
+
+
+        {
+            id: 3,
+
+            cte: "123458",
+            nf: "987656",
+
+            origem: "São Paulo - SP",
+            destino: "Salvador - BA",
+
+            pesoCalculado: 171.9,
+            pesoUtilizado: 171.91,
+
+            valorMercCalculado: 6061.30,
+            valorMercUtilizado: 6061.30,
+
+            componentes: [
+
+                {
+                    nome: "Frete Peso",
+                    calculado: 183.00,
+                    utilizado: 223.00
+                },
+
+                {
+                    nome: "GRIS + Ad Valorem",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Pedágio",
+                    calculado: 13.60,
+                    utilizado: 13.60
+                },
+
+                {
+                    nome: "Taxa TDE",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "Taxa CT-e",
+                    calculado: 0,
+                    utilizado: 0
+                },
+
+                {
+                    nome: "ICMS",
+                    calculado: 26.81,
+                    utilizado: 32.26
+                }
+
+            ],
+
+            totalCalculado: 223.41,
+            totalUtilizado: 268.86,
+
+            status: "PENDENTE",
+            comentario: ""
+        }
+
+    ];
+
+
+    let freteSelecionado = null;
+    let statusSelecionado = null;
+
+
+    /*
+     * ============================================
+     * FORMATAÇÃO
+     * ============================================
+     */
+
+    function moeda(valor) {
+
+        return valor.toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
+
+    }
+
+
+    function diferenca(frete) {
+
+        return frete.totalUtilizado - frete.totalCalculado;
+
+    }
+
+
+    /*
+     * ============================================
+     * DASHBOARD
+     * ============================================
+     */
+
+    function atualizarDashboard() {
+
+        document.getElementById("totalDocumentos")
+            .textContent = fretes.length;
+
+
+        const divergentes = fretes.filter(
+            f => diferenca(f) !== 0
+        );
+
+        document.getElementById("totalDivergentes")
+            .textContent = divergentes.length;
+
+
+        const respondidos = fretes.filter(
+            f =>
+                f.status === "PROCEDENTE" ||
+                f.status === "NAO_PROCEDENTE"
+        );
+
+        document.getElementById("totalRespondidos")
+            .textContent = respondidos.length;
+
+
+        const valorTotal = divergentes.reduce(
+            (total, f) => total + diferenca(f),
+            0
+        );
+
+        document.getElementById("valorDivergencias")
+            .textContent = moeda(valorTotal);
+
+    }
+
+
+    /*
+     * ============================================
+     * TABELA PRINCIPAL
+     * ============================================
+     */
+
+    function renderizarTabela() {
+
+        const tbody =
+            document.getElementById("tabelaFretes");
+
+        tbody.innerHTML = "";
+
+
+        const filtroCte =
+            document.getElementById("filtroCte")
+                .value
+                .toLowerCase();
+
+
+        const filtroStatus =
+            document.getElementById("filtroStatus")
+                .value;
+
+
+        const filtrados = fretes.filter(frete => {
+
+            const correspondeCte =
+                frete.cte
+                    .toLowerCase()
+                    .includes(filtroCte);
+
+
+            let correspondeStatus = true;
+
+
+            if (filtroStatus !== "TODOS") {
+
+                correspondeStatus =
+                    frete.status === filtroStatus;
+
+            }
+
+
+            return correspondeCte &&
+                   correspondeStatus;
+
+        });
+
+
+        filtrados.forEach(frete => {
+
+            const diff = diferenca(frete);
+
+
+            const tr = document.createElement("tr");
+
+
+            let statusHtml = "";
+
+
+            if (frete.status === "PENDENTE") {
+
+                statusHtml =
+                    `<span class="status status-pendente">
+                        Pendente
+                    </span>`;
+
+            }
+
+            else if (frete.status === "PROCEDENTE") {
+
+                statusHtml =
+                    `<span class="status status-respondido">
+                        Procedente
+                    </span>`;
+
+            }
+
+            else {
+
+                statusHtml =
+                    `<span class="status status-nao-procedente">
+                        Não procedente
+                    </span>`;
+
+            }
+
+
+            tr.innerHTML = `
+
+                <td><strong>${frete.cte}</strong></td>
+
+                <td>${frete.nf}</td>
+
+                <td>${frete.origem}</td>
+
+                <td>${frete.destino}</td>
+
+                <td class="valor">
+                    ${moeda(frete.totalCalculado)}
+                </td>
+
+                <td class="valor">
+                    ${moeda(frete.totalUtilizado)}
+                </td>
+
+                <td class="divergencia">
+                    ${moeda(diff)}
+                </td>
+
+                <td>
+                    ${statusHtml}
+                </td>
+
+                <td>
+                    <button
+                        class="btn-detalhar"
+                        onclick="abrirFrete(${frete.id})"
+                    >
+                        Analisar
+                    </button>
+                </td>
+
+            `;
+
+
+            tbody.appendChild(tr);
+
+        });
+
+    }
+
+
+    /*
+     * ============================================
+     * ABRIR MODAL
+     * ============================================
+     */
+
+    function abrirFrete(id) {
+
+        const frete =
+            fretes.find(f => f.id === id);
+
+
+        if (!frete) return;
+
+
+        freteSelecionado = frete;
+
+
+        document.getElementById("modalCte")
+            .textContent = frete.cte;
+
+        document.getElementById("modalNf")
+            .textContent = frete.nf;
+
+        document.getElementById("modalOrigem")
+            .textContent = frete.origem;
+
+        document.getElementById("modalDestino")
+            .textContent = frete.destino;
+
+        document.getElementById("modalPesoCalculado")
+            .textContent =
+            frete.pesoCalculado + " kg";
+
+        document.getElementById("modalPesoUtilizado")
+            .textContent =
+            frete.pesoUtilizado + " kg";
+
+        document.getElementById("modalValorMercadoria")
+            .textContent =
+            moeda(frete.valorMercCalculado);
+
+        document.getElementById("modalDiferenca")
+            .textContent =
+            moeda(diferenca(frete));
+
+
+        /*
+         * COMPONENTES
+         */
+
+        const tbody =
+            document.getElementById("tabelaComponentes");
+
+        tbody.innerHTML = "";
+
+
+        frete.componentes.forEach(componente => {
+
+            const diff =
+                componente.utilizado -
+                componente.calculado;
+
+
+            const classe =
+                diff === 0
+                    ? "diferenca-zero"
+                    : "diferenca-positiva";
+
+
+            tbody.innerHTML += `
+
+                <tr>
+
+                    <td>
+                        ${componente.nome}
+                    </td>
+
+                    <td>
+                        ${moeda(componente.calculado)}
+                    </td>
+
+                    <td>
+                        ${moeda(componente.utilizado)}
+                    </td>
+
+                    <td class="${classe}">
+                        ${moeda(diff)}
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+
+        /*
+         * RECUPERA MANIFESTAÇÃO EXISTENTE
+         */
+
+        statusSelecionado =
+            frete.status !== "PENDENTE"
+                ? frete.status
+                : null;
+
+
+        document.getElementById("comentario")
+            .value =
+            frete.comentario || "";
+
+
+        atualizarBotoesStatus();
+
+
+        document
+            .getElementById("modalOverlay")
+            .classList.add("aberto");
+
+    }
+
+
+    /*
+     * ============================================
+     * STATUS
+     * ============================================
+     */
+
+    function selecionarStatus(status) {
+
+        statusSelecionado = status;
+
+        atualizarBotoesStatus();
+
+    }
+
+
+    function atualizarBotoesStatus() {
+
+        const btnProcedente =
+            document.getElementById("btnProcedente");
+
+        const btnNaoProcedente =
+            document.getElementById("btnNaoProcedente");
+
+
+        btnProcedente.className = "opcao";
+
+        btnNaoProcedente.className = "opcao";
+
+
+        if (statusSelecionado === "PROCEDENTE") {
+
+            btnProcedente.classList.add(
+                "selecionada-procedente"
+            );
+
+        }
+
+
+        if (statusSelecionado === "NAO_PROCEDENTE") {
+
+            btnNaoProcedente.classList.add(
+                "selecionada-nao-procedente"
+            );
+
+        }
+
+    }
+
+
+    /*
+     * ============================================
+     * SALVAR MANIFESTAÇÃO
+     * ============================================
+     */
+
+    function salvarManifestacao() {
+
+        if (!freteSelecionado) return;
+
+
+        if (!statusSelecionado) {
+
+            alert(
+                "Selecione se a divergência é procedente ou não procedente."
+            );
+
+            return;
+
+        }
+
+
+        const comentario =
+            document.getElementById("comentario")
+                .value
+                .trim();
+
+
+        if (!comentario) {
+
+            alert(
+                "Informe um comentário sobre a divergência."
+            );
+
+            return;
+
+        }
+
+
+        freteSelecionado.status =
+            statusSelecionado;
+
+
+        freteSelecionado.comentario =
+            comentario;
+
+
+        /*
+         * Por enquanto armazenamos no navegador.
+         *
+         * Futuramente:
+         *
+         * POST /api/manifestacoes
+         *
+         */
+
+        localStorage.setItem(
+            "fretes",
+            JSON.stringify(fretes)
+        );
+
+
+        alert(
+            "Manifestação salva com sucesso!"
+        );
+
+
+        fecharModal();
+
+        atualizarDashboard();
+
+        renderizarTabela();
+
+    }
+
+
+    /*
+     * ============================================
+     * FECHAR MODAL
+     * ============================================
+     */
+
+    function fecharModal() {
+
+        document
+            .getElementById("modalOverlay")
+            .classList.remove("aberto");
+
+        freteSelecionado = null;
+
+    }
+
+
+    /*
+     * ============================================
+     * INICIALIZAÇÃO
+     * ============================================
+     */
+
+    atualizarDashboard();
+
+    renderizarTabela();
+
+</script>
+
+</body>
+</html>
