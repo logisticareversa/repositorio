@@ -1,3 +1,4 @@
+```
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -452,14 +453,74 @@
             }
         }
     </style>
+
+<style>
+#loginOverlay {
+    position: fixed;
+    inset: 0;
+    background: #f4f6f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+#loginCard {
+    background: white;
+    width: min(420px, calc(100% - 40px));
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.12);
+}
+#loginCard h2 { margin-bottom: 8px; }
+#loginCard p { color: #6b7280; margin-bottom: 20px; font-size: 14px; }
+#loginCard input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+#loginCard button {
+    width: 100%;
+    background: #12355b;
+    color: white;
+    padding: 12px;
+}
+#loginErro {
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+}
+#btnSair {
+    margin-left: 12px;
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255,255,255,.5);
+}
+</style>
+
 </head>
 
 <body>
+
+<div id="loginOverlay">
+    <div id="loginCard">
+        <h2>Auditoria de Fretes</h2>
+        <p>Entre com seu usuário do Supabase para acessar os dados.</p>
+        <input id="loginEmail" type="email" placeholder="E-mail">
+        <input id="loginSenha" type="password" placeholder="Senha">
+        <button onclick="entrar()">Entrar</button>
+        <div id="loginErro"></div>
+    </div>
+</div>
+
 
 <header>
     <h1>Auditoria de Fretes</h1>
     <div class="transportadora">
         Transportadora ABC Ltda.
+        <button id="btnSair" onclick="sair()">Sair</button>
     </div>
 </header>
 
@@ -715,221 +776,261 @@
 </div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+    // ============================================================
+    // CONFIGURAÇÃO DO SUPABASE
+    // Preencha estes dois valores após criar seu projeto Supabase.
+    // Use APENAS a Publishable key (ou a antiga anon key).
+    // NUNCA coloque a service_role/secret key aqui.
+    // ============================================================
+    const SUPABASE_URL = "https://divojbzqyavitbzyjxfi.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Mvcm2SEpyA7CfU3BXJr33w_tklCk9mS";
+
+    const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
 
     /*
      * ============================================
-     * DADOS TEMPORÁRIOS
+     * DADOS
      * ============================================
-     *
-     * Futuramente esta parte será substituída
-     * por uma chamada à API / PostgreSQL.
      */
 
-    const fretes = [
-
-        {
-            id: 1,
-
-            cte: "123456",
-            nf: "987654",
-
-            origem: "São Paulo - SP",
-            destino: "Curitiba - PR",
-
-            pesoCalculado: 65.8,
-            pesoUtilizado: 65.83,
-
-            valorMercCalculado: 2167.26,
-            valorMercUtilizado: 2167.26,
-
-            componentes: [
-
-                {
-                    nome: "Frete Peso",
-                    calculado: 98.00,
-                    utilizado: 135.00
-                },
-
-                {
-                    nome: "GRIS + Ad Valorem",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Pedágio",
-                    calculado: 6.80,
-                    utilizado: 6.80
-                },
-
-                {
-                    nome: "Taxa TDE",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Taxa CT-e",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "ICMS",
-                    calculado: 14.29,
-                    utilizado: 19.34
-                }
-
-            ],
-
-            totalCalculado: 119.09,
-            totalUtilizado: 161.14,
-
-            status: "PENDENTE",
-            comentario: ""
-        },
-
-
-        {
-            id: 2,
-
-            cte: "123457",
-            nf: "987655",
-
-            origem: "São Paulo - SP",
-            destino: "Curitiba - PR",
-
-            pesoCalculado: 63.5,
-            pesoUtilizado: 63.48,
-
-            valorMercCalculado: 1851.12,
-            valorMercUtilizado: 1851.12,
-
-            componentes: [
-
-                {
-                    nome: "Frete Peso",
-                    calculado: 98.00,
-                    utilizado: 135.00
-                },
-
-                {
-                    nome: "GRIS + Ad Valorem",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Pedágio",
-                    calculado: 6.80,
-                    utilizado: 6.80
-                },
-
-                {
-                    nome: "Taxa TDE",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Taxa CT-e",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "ICMS",
-                    calculado: 14.29,
-                    utilizado: 19.34
-                }
-
-            ],
-
-            totalCalculado: 119.09,
-            totalUtilizado: 161.14,
-
-            status: "PENDENTE",
-            comentario: ""
-        },
-
-
-        {
-            id: 3,
-
-            cte: "123458",
-            nf: "987656",
-
-            origem: "São Paulo - SP",
-            destino: "Salvador - BA",
-
-            pesoCalculado: 171.9,
-            pesoUtilizado: 171.91,
-
-            valorMercCalculado: 6061.30,
-            valorMercUtilizado: 6061.30,
-
-            componentes: [
-
-                {
-                    nome: "Frete Peso",
-                    calculado: 183.00,
-                    utilizado: 223.00
-                },
-
-                {
-                    nome: "GRIS + Ad Valorem",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Pedágio",
-                    calculado: 13.60,
-                    utilizado: 13.60
-                },
-
-                {
-                    nome: "Taxa TDE",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "Taxa CT-e",
-                    calculado: 0,
-                    utilizado: 0
-                },
-
-                {
-                    nome: "ICMS",
-                    calculado: 26.81,
-                    utilizado: 32.26
-                }
-
-            ],
-
-            totalCalculado: 223.41,
-            totalUtilizado: 268.86,
-
-            status: "PENDENTE",
-            comentario: ""
-        }
-
-    ];
-
+    let fretes = [];
 
     let freteSelecionado = null;
     let statusSelecionado = null;
 
+    // ============================================
+    // AUTENTICAÇÃO SUPABASE
+    // ============================================
+    async function entrar() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const senha = document.getElementById("loginSenha").value;
+        const erro = document.getElementById("loginErro");
+
+        erro.style.display = "none";
+        erro.textContent = "";
+
+        if (!email || !senha) {
+            erro.textContent = "Informe e-mail e senha.";
+            erro.style.display = "block";
+            return;
+        }
+
+        try {
+            const { error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password: senha
+            });
+
+            if (error) throw error;
+
+            document.getElementById("loginOverlay").style.display = "none";
+            await carregarFretes();
+        } catch (error) {
+            console.error(error);
+            erro.textContent = "Não foi possível entrar. Verifique o e-mail e a senha.";
+            erro.style.display = "block";
+        }
+    }
+
+    async function sair() {
+        await supabaseClient.auth.signOut();
+        document.getElementById("loginOverlay").style.display = "flex";
+    }
+
+    async function verificarSessao() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const overlay = document.getElementById("loginOverlay");
+
+        if (session) {
+            overlay.style.display = "none";
+            await carregarFretes();
+        } else {
+            overlay.style.display = "flex";
+        }
+    }
+
 
     /*
      * ============================================
-     * FORMATAÇÃO
+     * CARREGAR FRETES DA API
+     * ============================================
+     */
+
+    async function carregarFretes() {
+
+        try {
+
+            const { data: dados, error } = await supabaseClient
+                .from("fretes")
+                .select("*")
+                .order("id", { ascending: true });
+
+            if (error) {
+                throw error;
+            }
+
+            fretes = (dados || []).map(frete => ({
+
+                id: Number(frete.id),
+
+                cte: String(frete.cte ?? ""),
+                nf: frete.nf ?? "",
+
+                origem: frete.origem ?? "",
+                destino: frete.destino ?? "",
+
+                pesoCalculado:
+                    Number(frete.peso_calculado ?? 0),
+
+                pesoUtilizado:
+                    Number(frete.peso_utilizado ?? 0),
+
+                valorMercCalculado:
+                    Number(frete.valor_merc_calculado ?? 0),
+
+                valorMercUtilizado:
+                    Number(frete.valor_merc_utilizado ?? 0),
+
+                componentes: [
+
+                    {
+                        nome: "Frete Peso",
+
+                        calculado:
+                            Number(
+                                frete.frete_peso_calculado ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.frete_peso_utilizado ?? 0
+                            )
+                    },
+
+                    {
+                        nome: "GRIS + Ad Valorem",
+
+                        calculado:
+                            Number(
+                                frete.gris_adv_calculado ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.gris_adv_utilizado ?? 0
+                            )
+                    },
+
+                    {
+                        nome: "Pedágio",
+
+                        calculado:
+                            Number(
+                                frete.pedagio_calculado ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.pedagio_utilizado ?? 0
+                            )
+                    },
+
+                    {
+                        nome: "Taxa TDE",
+
+                        calculado:
+                            Number(
+                                frete.tx_tde_calculada ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.tx_tde_utilizado ?? 0
+                            )
+                    },
+
+                    {
+                        nome: "Taxa CT-e",
+
+                        calculado:
+                            Number(
+                                frete.taxa_cte_calculado ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.taxa_cte_utilizado ?? 0
+                            )
+                    },
+
+                    {
+                        nome: "ICMS",
+
+                        calculado:
+                            Number(
+                                frete.icms_calculado ?? 0
+                            ),
+
+                        utilizado:
+                            Number(
+                                frete.icms_utilizado ?? 0
+                            )
+                    }
+
+                ],
+
+                totalCalculado:
+                    Number(
+                        frete.total_calculado ?? 0
+                    ),
+
+                totalUtilizado:
+                    Number(
+                        frete.total_utilizado ?? 0
+                    ),
+
+                status:
+                    frete.status || "PENDENTE",
+
+                comentario:
+                    frete.comentario || ""
+
+            }));
+
+            atualizarDashboard();
+            renderizarTabela();
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar fretes:",
+                erro
+            );
+
+            alert(
+                "Não foi possível carregar os dados da auditoria.\\n\\n" +
+                erro.message
+            );
+
+        }
+
+    }
+
+    /*
+     * ============================================
+     * FORMATAÇÃO DE MOEDA
      * ============================================
      */
 
     function moeda(valor) {
+
+        valor = Number(valor) || 0;
 
         return valor.toLocaleString(
             "pt-BR",
@@ -942,9 +1043,18 @@
     }
 
 
+    /*
+     * ============================================
+     * DIFERENÇA
+     * ============================================
+     */
+
     function diferenca(frete) {
 
-        return frete.totalUtilizado - frete.totalCalculado;
+        return (
+            Number(frete.totalUtilizado || 0) -
+            Number(frete.totalCalculado || 0)
+        );
 
     }
 
@@ -957,144 +1067,209 @@
 
     function atualizarDashboard() {
 
-        document.getElementById("totalDocumentos")
-            .textContent = fretes.length;
+        document.getElementById(
+            "totalDocumentos"
+        ).textContent = fretes.length;
 
 
-        const divergentes = fretes.filter(
-            f => diferenca(f) !== 0
-        );
-
-        document.getElementById("totalDivergentes")
-            .textContent = divergentes.length;
+        const divergentes =
+            fretes.filter(
+                f => diferenca(f) !== 0
+            );
 
 
-        const respondidos = fretes.filter(
-            f =>
-                f.status === "PROCEDENTE" ||
-                f.status === "NAO_PROCEDENTE"
-        );
-
-        document.getElementById("totalRespondidos")
-            .textContent = respondidos.length;
+        document.getElementById(
+            "totalDivergentes"
+        ).textContent =
+            divergentes.length;
 
 
-        const valorTotal = divergentes.reduce(
-            (total, f) => total + diferenca(f),
-            0
-        );
+        const respondidos =
+            fretes.filter(
+                f =>
+                    f.status === "PROCEDENTE" ||
+                    f.status === "NAO_PROCEDENTE"
+            );
 
-        document.getElementById("valorDivergencias")
-            .textContent = moeda(valorTotal);
+
+        document.getElementById(
+            "totalRespondidos"
+        ).textContent =
+            respondidos.length;
+
+
+        const valorTotal =
+            divergentes.reduce(
+                (total, f) =>
+                    total + diferenca(f),
+                0
+            );
+
+
+        document.getElementById(
+            "valorDivergencias"
+        ).textContent =
+            moeda(valorTotal);
 
     }
 
 
     /*
      * ============================================
-     * TABELA PRINCIPAL
+     * TABELA
      * ============================================
      */
 
     function renderizarTabela() {
 
         const tbody =
-            document.getElementById("tabelaFretes");
+            document.getElementById(
+                "tabelaFretes"
+            );
+
 
         tbody.innerHTML = "";
 
 
         const filtroCte =
-            document.getElementById("filtroCte")
-                .value
-                .toLowerCase();
+            document.getElementById(
+                "filtroCte"
+            )
+            .value
+            .toLowerCase();
 
 
         const filtroStatus =
-            document.getElementById("filtroStatus")
-                .value;
+            document.getElementById(
+                "filtroStatus"
+            )
+            .value;
 
 
-        const filtrados = fretes.filter(frete => {
+        const filtrados =
+            fretes.filter(frete => {
 
-            const correspondeCte =
-                frete.cte
-                    .toLowerCase()
-                    .includes(filtroCte);
-
-
-            let correspondeStatus = true;
+                const correspondeCte =
+                    String(frete.cte)
+                        .toLowerCase()
+                        .includes(filtroCte);
 
 
-            if (filtroStatus !== "TODOS") {
-
-                correspondeStatus =
-                    frete.status === filtroStatus;
-
-            }
+                let correspondeStatus = true;
 
 
-            return correspondeCte &&
-                   correspondeStatus;
+                if (
+                    filtroStatus !== "TODOS"
+                ) {
 
-        });
+                    correspondeStatus =
+                        frete.status ===
+                        filtroStatus;
+
+                }
+
+
+                return (
+                    correspondeCte &&
+                    correspondeStatus
+                );
+
+            });
 
 
         filtrados.forEach(frete => {
 
-            const diff = diferenca(frete);
+            const diff =
+                diferenca(frete);
 
 
-            const tr = document.createElement("tr");
+            const tr =
+                document.createElement("tr");
 
 
             let statusHtml = "";
 
 
-            if (frete.status === "PENDENTE") {
+            if (
+                frete.status ===
+                "PENDENTE"
+            ) {
 
-                statusHtml =
-                    `<span class="status status-pendente">
+                statusHtml = `
+                    <span class="status status-pendente">
                         Pendente
-                    </span>`;
+                    </span>
+                `;
 
             }
 
-            else if (frete.status === "PROCEDENTE") {
+            else if (
+                frete.status ===
+                "PROCEDENTE"
+            ) {
 
-                statusHtml =
-                    `<span class="status status-respondido">
+                statusHtml = `
+                    <span class="status status-respondido">
                         Procedente
-                    </span>`;
+                    </span>
+                `;
+
+            }
+
+            else if (
+                frete.status ===
+                "NAO_PROCEDENTE"
+            ) {
+
+                statusHtml = `
+                    <span class="status status-nao-procedente">
+                        Não procedente
+                    </span>
+                `;
 
             }
 
             else {
 
-                statusHtml =
-                    `<span class="status status-nao-procedente">
-                        Não procedente
-                    </span>`;
+                statusHtml = `
+                    <span class="status status-pendente">
+                        ${frete.status}
+                    </span>
+                `;
 
             }
 
 
             tr.innerHTML = `
 
-                <td><strong>${frete.cte}</strong></td>
+                <td>
+                    <strong>
+                        ${frete.cte}
+                    </strong>
+                </td>
 
-                <td>${frete.nf}</td>
+                <td>
+                    ${frete.nf}
+                </td>
 
-                <td>${frete.origem}</td>
+                <td>
+                    ${frete.origem}
+                </td>
 
-                <td>${frete.destino}</td>
-
-                <td class="valor">
-                    ${moeda(frete.totalCalculado)}
+                <td>
+                    ${frete.destino}
                 </td>
 
                 <td class="valor">
-                    ${moeda(frete.totalUtilizado)}
+                    ${moeda(
+                        frete.totalCalculado
+                    )}
+                </td>
+
+                <td class="valor">
+                    ${moeda(
+                        frete.totalUtilizado
+                    )}
                 </td>
 
                 <td class="divergencia">
@@ -1106,12 +1281,14 @@
                 </td>
 
                 <td>
+
                     <button
                         class="btn-detalhar"
                         onclick="abrirFrete(${frete.id})"
                     >
                         Analisar
                     </button>
+
                 </td>
 
             `;
@@ -1126,49 +1303,86 @@
 
     /*
      * ============================================
-     * ABRIR MODAL
+     * ABRIR FRETE
      * ============================================
      */
 
     function abrirFrete(id) {
 
         const frete =
-            fretes.find(f => f.id === id);
+            fretes.find(
+                f => Number(f.id) === Number(id)
+            );
 
 
-        if (!frete) return;
+        if (!frete) {
+
+            console.error(
+                "Frete não encontrado:",
+                id
+            );
+
+            return;
+
+        }
 
 
-        freteSelecionado = frete;
+        freteSelecionado =
+            frete;
 
 
-        document.getElementById("modalCte")
-            .textContent = frete.cte;
+        document.getElementById(
+            "modalCte"
+        ).textContent =
+            frete.cte;
 
-        document.getElementById("modalNf")
-            .textContent = frete.nf;
 
-        document.getElementById("modalOrigem")
-            .textContent = frete.origem;
+        document.getElementById(
+            "modalNf"
+        ).textContent =
+            frete.nf;
 
-        document.getElementById("modalDestino")
-            .textContent = frete.destino;
 
-        document.getElementById("modalPesoCalculado")
-            .textContent =
-            frete.pesoCalculado + " kg";
+        document.getElementById(
+            "modalOrigem"
+        ).textContent =
+            frete.origem;
 
-        document.getElementById("modalPesoUtilizado")
-            .textContent =
-            frete.pesoUtilizado + " kg";
 
-        document.getElementById("modalValorMercadoria")
-            .textContent =
-            moeda(frete.valorMercCalculado);
+        document.getElementById(
+            "modalDestino"
+        ).textContent =
+            frete.destino;
 
-        document.getElementById("modalDiferenca")
-            .textContent =
-            moeda(diferenca(frete));
+
+        document.getElementById(
+            "modalPesoCalculado"
+        ).textContent =
+            frete.pesoCalculado +
+            " kg";
+
+
+        document.getElementById(
+            "modalPesoUtilizado"
+        ).textContent =
+            frete.pesoUtilizado +
+            " kg";
+
+
+        document.getElementById(
+            "modalValorMercadoria"
+        ).textContent =
+            moeda(
+                frete.valorMercCalculado
+            );
+
+
+        document.getElementById(
+            "modalDiferenca"
+        ).textContent =
+            moeda(
+                diferenca(frete)
+            );
 
 
         /*
@@ -1176,53 +1390,69 @@
          */
 
         const tbody =
-            document.getElementById("tabelaComponentes");
+            document.getElementById(
+                "tabelaComponentes"
+            );
+
 
         tbody.innerHTML = "";
 
 
-        frete.componentes.forEach(componente => {
+        frete.componentes.forEach(
+            componente => {
 
-            const diff =
-                componente.utilizado -
-                componente.calculado;
-
-
-            const classe =
-                diff === 0
-                    ? "diferenca-zero"
-                    : "diferenca-positiva";
+                const calculado =
+                    Number(
+                        componente.calculado
+                    ) || 0;
 
 
-            tbody.innerHTML += `
+                const utilizado =
+                    Number(
+                        componente.utilizado
+                    ) || 0;
 
-                <tr>
 
-                    <td>
-                        ${componente.nome}
-                    </td>
+                const diff =
+                    utilizado - calculado;
 
-                    <td>
-                        ${moeda(componente.calculado)}
-                    </td>
 
-                    <td>
-                        ${moeda(componente.utilizado)}
-                    </td>
+                const classe =
+                    diff === 0
+                        ? "diferenca-zero"
+                        : "diferenca-positiva";
 
-                    <td class="${classe}">
-                        ${moeda(diff)}
-                    </td>
 
-                </tr>
+                tbody.innerHTML += `
 
-            `;
+                    <tr>
 
-        });
+                        <td>
+                            ${componente.nome}
+                        </td>
+
+                        <td>
+                            ${moeda(calculado)}
+                        </td>
+
+                        <td>
+                            ${moeda(utilizado)}
+                        </td>
+
+                        <td class="${classe}">
+                            ${moeda(diff)}
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        );
 
 
         /*
-         * RECUPERA MANIFESTAÇÃO EXISTENTE
+         * RECUPERAR MANIFESTAÇÃO
          */
 
         statusSelecionado =
@@ -1231,8 +1461,9 @@
                 : null;
 
 
-        document.getElementById("comentario")
-            .value =
+        document.getElementById(
+            "comentario"
+        ).value =
             frete.comentario || "";
 
 
@@ -1248,34 +1479,53 @@
 
     /*
      * ============================================
-     * STATUS
+     * SELECIONAR STATUS
      * ============================================
      */
 
     function selecionarStatus(status) {
 
-        statusSelecionado = status;
+        statusSelecionado =
+            status;
+
 
         atualizarBotoesStatus();
 
     }
 
 
+    /*
+     * ============================================
+     * ATUALIZAR BOTÕES
+     * ============================================
+     */
+
     function atualizarBotoesStatus() {
 
         const btnProcedente =
-            document.getElementById("btnProcedente");
+            document.getElementById(
+                "btnProcedente"
+            );
+
 
         const btnNaoProcedente =
-            document.getElementById("btnNaoProcedente");
+            document.getElementById(
+                "btnNaoProcedente"
+            );
 
 
-        btnProcedente.className = "opcao";
+        btnProcedente.className =
+            "opcao";
 
-        btnNaoProcedente.className = "opcao";
+
+        btnNaoProcedente.className =
+            "opcao";
 
 
-        if (statusSelecionado === "PROCEDENTE") {
+        if (
+            statusSelecionado ===
+            "PROCEDENTE"
+        ) {
 
             btnProcedente.classList.add(
                 "selecionada-procedente"
@@ -1284,7 +1534,10 @@
         }
 
 
-        if (statusSelecionado === "NAO_PROCEDENTE") {
+        if (
+            statusSelecionado ===
+            "NAO_PROCEDENTE"
+        ) {
 
             btnNaoProcedente.classList.add(
                 "selecionada-nao-procedente"
@@ -1301,10 +1554,17 @@
      * ============================================
      */
 
-    function salvarManifestacao() {
+    async function salvarManifestacao() {
 
-        if (!freteSelecionado) return;
+        if (!freteSelecionado) {
 
+            alert(
+                "Nenhum frete selecionado."
+            );
+
+            return;
+
+        }
 
         if (!statusSelecionado) {
 
@@ -1316,12 +1576,12 @@
 
         }
 
-
         const comentario =
-            document.getElementById("comentario")
-                .value
-                .trim();
-
+            document.getElementById(
+                "comentario"
+            )
+            .value
+            .trim();
 
         if (!comentario) {
 
@@ -1333,43 +1593,86 @@
 
         }
 
+        try {
 
-        freteSelecionado.status =
-            statusSelecionado;
+            const { error } = await supabaseClient
+                .from("fretes")
+                .update({
+                    status: statusSelecionado,
+                    comentario: comentario,
+                    atualizado_em: new Date().toISOString()
+                })
+                .eq("id", Number(freteSelecionado.id));
 
+            if (error) {
+                throw error;
+            }
 
-        freteSelecionado.comentario =
-            comentario;
+            // Atualiza também o histórico de manifestações.
+            const { error: historicoError } = await supabaseClient
+                .from("manifestacoes")
+                .insert({
+                    frete_id: Number(freteSelecionado.id),
+                    status: statusSelecionado,
+                    comentario: comentario
+                });
 
+            if (historicoError) {
+                console.warn(
+                    "Manifestação salva no frete, mas não foi possível gravar o histórico:",
+                    historicoError
+                );
+            }
 
-        /*
-         * Por enquanto armazenamos no navegador.
-         *
-         * Futuramente:
-         *
-         * POST /api/manifestacoes
-         *
-         */
+            freteSelecionado.status =
+                statusSelecionado;
 
-        localStorage.setItem(
-            "fretes",
-            JSON.stringify(fretes)
-        );
+            freteSelecionado.comentario =
+                comentario;
 
+            const indice =
+                fretes.findIndex(
+                    f =>
+                        Number(f.id) ===
+                        Number(
+                            freteSelecionado.id
+                        )
+                );
 
-        alert(
-            "Manifestação salva com sucesso!"
-        );
+            if (indice !== -1) {
 
+                fretes[indice].status =
+                    statusSelecionado;
 
-        fecharModal();
+                fretes[indice].comentario =
+                    comentario;
 
-        atualizarDashboard();
+            }
 
-        renderizarTabela();
+            atualizarDashboard();
+            renderizarTabela();
+
+            alert(
+                "Manifestação salva com sucesso!"
+            );
+
+            fecharModal();
+
+        } catch (erro) {
+
+            console.error(
+                "ERRO AO SALVAR:",
+                erro
+            );
+
+            alert(
+                "Não foi possível salvar a manifestação.\n\n" +
+                erro.message
+            );
+
+        }
 
     }
-
 
     /*
      * ============================================
@@ -1380,10 +1683,20 @@
     function fecharModal() {
 
         document
-            .getElementById("modalOverlay")
-            .classList.remove("aberto");
+            .getElementById(
+                "modalOverlay"
+            )
+            .classList.remove(
+                "aberto"
+            );
 
-        freteSelecionado = null;
+
+        freteSelecionado =
+            null;
+
+
+        statusSelecionado =
+            null;
 
     }
 
@@ -1394,11 +1707,24 @@
      * ============================================
      */
 
-    atualizarDashboard();
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
 
-    renderizarTabela();
+            console.log(
+                "Página carregada."
+            );
+
+
+            verificarSessao();
+
+        }
+    );
 
 </script>
 
+
 </body>
 </html>
+
+```
